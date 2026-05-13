@@ -1,27 +1,26 @@
 import type { IrrigationController } from "@/lib/irrigation/use-irrigation-controller";
-import { AreaBadge } from "./primitives";
 import { IrrigationZone, ZONE_SHAPES } from "./IrrigationZone";
 
 function Shrubs() {
   const top = Array.from({ length: 24 }, (_, i) => ({
     x: 120 + i * 38,
     y: 72 + Math.sin(i) * 3,
-    r: 7 + (i % 4),
+    r: 4.5 + (i % 3),
   }));
   const right = Array.from({ length: 9 }, (_, i) => ({
     x: 1058,
     y: 88 + i * 33,
-    r: 7 + (i % 3),
+    r: 4.5 + (i % 2),
   }));
   const bottom = Array.from({ length: 18 }, (_, i) => ({
     x: 500 + i * 31,
     y: 368 + Math.sin(i) * 5,
-    r: 6 + (i % 3),
+    r: 4 + (i % 2),
   }));
   const left = Array.from({ length: 10 }, (_, i) => ({
     x: 112,
     y: 88 + i * 29,
-    r: 7 + (i % 4),
+    r: 4.5 + (i % 3),
   }));
   const all = [...top, ...right, ...bottom, ...left];
   return (
@@ -34,7 +33,7 @@ function Shrubs() {
           r={s.r}
           fill="rgba(143,214,173,0.34)"
           stroke="rgba(143,214,173,0.56)"
-          strokeWidth="2"
+          strokeWidth="1.5"
         />
       ))}
     </g>
@@ -48,30 +47,15 @@ export function SiteMap({ hmi }: { hmi: IrrigationController }) {
   !!hmi.zones.find((z) => z.id === id)?.valveOpen;
 
   return (
-    <section className="rounded-2xl md:rounded-3xl bg-surface border border-border p-3 md:p-5 shadow-2xl overflow-hidden">
-      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-4">
-        <div>
-          <p className="text-primary text-xs md:text-sm font-semibold tracking-widest uppercase">
-            Mapa nawadniania
-          </p>
-          <h2 className="text-xl md:text-2xl font-semibold mt-1">
-            Rzut działki i strefy podlewania
-          </h2>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Kliknij strefę na mapie, żeby wybrać sekcję. Na telefonie przesuń mapę palcem w bok.
-          </p>
-        </div>
-        <div className="grid grid-cols-3 gap-2 md:gap-3 text-xs md:text-sm w-full lg:w-auto">
-          <AreaBadge label="Działka" value="17 a" sub="1700 m²" />
-          <AreaBadge label="Ogród" value="ok. 12 a" sub="1200 m²" />
-          <AreaBadge label="Dom" value="101 m²" sub="z rzutu" />
-        </div>
-      </div>
-
-      <div className="relative rounded-2xl md:rounded-3xl bg-surface-deep border border-border p-2 md:p-4 overflow-x-auto overflow-y-hidden">
+    <section className="rounded-2xl md:rounded-3xl bg-surface border border-border p-2 md:p-3 shadow-2xl overflow-hidden">
+      <div className="relative w-full aspect-[14/5] rounded-2xl md:rounded-3xl bg-surface-deep border border-border overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_35%,rgba(143,214,173,0.10),transparent_42%)]" />
 
-        <svg viewBox="0 0 1200 500" className="relative w-[760px] max-w-none md:w-full h-auto select-none">
+        <svg
+          viewBox="100 65 1080 370"
+          className="absolute inset-0 w-full h-full select-none"
+          preserveAspectRatio="xMidYMid meet"
+        >
           <defs>
             <pattern id="grass" width="18" height="18" patternUnits="userSpaceOnUse">
               <circle cx="3" cy="4" r="1.1" fill="rgba(143,214,173,0.13)" />
@@ -97,7 +81,7 @@ export function SiteMap({ hmi }: { hmi: IrrigationController }) {
             </filter>
           </defs>
 
-          <g transform="translate(48 42)">
+          <g>
             <rect
               x="95"
               y="55"
@@ -130,7 +114,7 @@ export function SiteMap({ hmi }: { hmi: IrrigationController }) {
               stroke="rgba(245,245,247,0.92)"
               strokeWidth="4"
             />
-            <text x="292" y="165" fill="rgba(245,245,247,0.95)" fontSize="28" fontWeight="800" textAnchor="middle">
+            <text x="292" y="165" fill="rgba(245,245,247,0.95)" fontSize="20" fontWeight="800" textAnchor="middle">
               Dom
             </text>
 

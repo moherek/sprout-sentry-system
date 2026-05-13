@@ -1,45 +1,94 @@
+import { useState } from "react";
 import { useIrrigationController } from "@/lib/irrigation/use-irrigation-controller";
+import { Sidebar, type Screen } from "../Sidebar";
 import { Header } from "./Header";
+import { PulpitScreen } from "../screens/PulpitScreen";
+import { MapScreen } from "../screens/MapScreen";
+import { ScheduleScreen } from "../screens/ScheduleScreen";
+import { CalendarScreen } from "../screens/CalendarScreen";
+import { ManualScreen } from "../screens/ManualScreen";
+import { AlarmsScreen } from "../screens/AlarmsScreen";
+import { HistoryScreen } from "../screens/HistoryScreen";
+import { SettingsScreen } from "../screens/SettingsScreen";
 import { AlarmBanner } from "./AlarmBanner";
-import { SiteMap } from "./SiteMap";
-import { ActiveZoneCard } from "./ActiveZoneCard";
-import { ControlPanel } from "./ControlPanel";
-import { SystemStatus } from "./SystemStatus";
-import { SettingsPanel } from "./SettingsPanel";
-import { ZoneCards } from "./ZoneCards";
-import { SchedulePanel } from "./SchedulePanel";
-import { DiagnosticsPanel } from "./DiagnosticsPanel";
 
 export function IrrigationHMI() {
   const hmi = useIrrigationController();
+  const [activeScreen, setActiveScreen] = useState<Screen>("dashboard");
+
+  const screenTitles: Record<Screen, { title: string; subtitle: string }> = {
+    dashboard: {
+      title: "Pulpit",
+      subtitle: "Główny widok operatorski",
+    },
+    map: {
+      title: "Mapa nawadniania",
+      subtitle: "Rzut działki i strefy podlewania",
+    },
+    schedule: {
+      title: "Harmonogram podlewania",
+      subtitle: "Programy, dni tygodnia i godziny startu",
+    },
+    calendar: {
+      title: "Kalendarz podlewania",
+      subtitle: "Widok tygodniowy z harmonogramem",
+    },
+    manual: {
+      title: "Sterowanie ręczne",
+      subtitle: "Ręczne otwieranie zaworów i testy",
+    },
+    alarms: {
+      title: "Alarmy",
+      subtitle: "Aktywne alarmy i historia zdarzeń",
+    },
+    history: {
+      title: "Historia",
+      subtitle: "Logi systemowe i historia podlewania",
+    },
+    settings: {
+      title: "Ustawienia",
+      subtitle: "Konfiguracja systemu i diagnostyka",
+    },
+  };
+
+  const renderScreen = () => {
+    switch (activeScreen) {
+      case "dashboard":
+        return <PulpitScreen hmi={hmi} />;
+      case "map":
+        return <MapScreen hmi={hmi} />;
+      case "schedule":
+        return <ScheduleScreen hmi={hmi} />;
+      case "calendar":
+        return <CalendarScreen hmi={hmi} />;
+      case "manual":
+        return <ManualScreen hmi={hmi} />;
+      case "alarms":
+        return <AlarmsScreen hmi={hmi} />;
+      case "history":
+        return <HistoryScreen hmi={hmi} />;
+      case "settings":
+        return <SettingsScreen hmi={hmi} />;
+      default:
+        return <PulpitScreen hmi={hmi} />;
+    }
+  };
+
+  const currentScreen = screenTitles[activeScreen];
 
   return (
-    <main className="min-h-screen bg-background text-foreground p-3 md:p-6 font-sans">
-      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
-        <Header hmi={hmi} />
-        <AlarmBanner hmi={hmi} />
-         
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
-        <div className="xl:col-span-8">
-          <SiteMap hmi={hmi} />
-        </div>
+    <div className="flex min-h-screen bg-background text-foreground font-sans">
+      {/* Sidebar */}
+      <Sidebar activeScreen={activeScreen} onScreenChange={setActiveScreen} />
 
-        <div className="xl:col-span-4 flex flex-col gap-5">
-           <div className="flex-1">
-          <ControlPanel hmi={hmi} />  
+      {/* Main Content */}
+      <main className="flex-1 min-w-0 overflow-y-auto">
+        <div className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
+          <Header hmi={hmi} screenTitle={currentScreen.title} screenSubtitle={currentScreen.subtitle} />
+          <AlarmBanner hmi={hmi} />
+          {renderScreen()}
         </div>
-         <div className="flex-1">
-          <SystemStatus hmi={hmi} />
-        </div>
-    
+      </main>
     </div>
-
-    </div>
-        <SettingsPanel hmi={hmi} />
-        <ZoneCards hmi={hmi} />
-        <SchedulePanel hmi={hmi} />
-        <DiagnosticsPanel hmi={hmi} />
-    </div>
-    </main>
   );
 }

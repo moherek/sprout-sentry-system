@@ -100,15 +100,15 @@ export function IrrigationZone({
     <circle
       cx={labelX}
       cy={labelY - 44}
-      r="18"
+      r="13"
       fill="none"
       stroke="#38bdf8"
-      strokeWidth="4"
+      strokeWidth="3"
       opacity="0.9"
     >
       <animate
         attributeName="r"
-        values="18;70"
+        values="13;50"
         dur="1.5s"
         repeatCount="indefinite"
       />
@@ -123,7 +123,7 @@ export function IrrigationZone({
         <text
       x={labelX}
       y={labelY - 36}
-      fontSize="30"
+      fontSize="22"
       fontWeight="800"
       textAnchor="middle"
     >
@@ -131,7 +131,7 @@ export function IrrigationZone({
 
       <animate
         attributeName="font-size"
-        values="26;34;26"
+        values="20;26;20"
         dur="1.6s"
         repeatCount="indefinite"
       />
@@ -150,7 +150,7 @@ export function IrrigationZone({
       />
 
       {bigLabel && (
-        <text x={labelX} y={labelY - 2} fill={p.text} fontSize="30" fontWeight="800" textAnchor="middle">
+        <text x={labelX} y={labelY - 2} fill={p.text} fontSize="22" fontWeight="800" textAnchor="middle">
           {bigLabel}
         </text>
       )}
@@ -158,7 +158,7 @@ export function IrrigationZone({
         x={labelX}
         y={bigLabel ? labelY + 34 : labelY}
         fill={p.text}
-        fontSize={active ? 25 : 23}
+        fontSize={active ? 18 : 17}
         fontWeight="700"
         textAnchor="middle"
       >
@@ -168,20 +168,20 @@ export function IrrigationZone({
       {active && (
         <g pointerEvents="none">
           <rect
-            x={labelX - 55}
+            x={labelX - 42}
             y={bigLabel ? labelY + 45 : labelY + 12}
-            width="110"
-            height="34"
-            rx="17"
+            width="84"
+            height="26"
+            rx="13"
             fill="rgba(143,214,173,0.16)"
             stroke={p.stroke}
-            strokeWidth="2"
+            strokeWidth="1.5"
           />
           <text
             x={labelX}
             y={bigLabel ? labelY + 68 : labelY + 35}
             fill={p.text}
-            fontSize="16"
+            fontSize="12"
             fontWeight="800"
             textAnchor="middle"
           >

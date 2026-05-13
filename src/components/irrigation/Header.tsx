@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import type { IrrigationController } from "@/lib/irrigation/use-irrigation-controller";
 import { cn } from "@/lib/utils";
 
-export function Header({ hmi }: { hmi: IrrigationController }) {
+interface HeaderProps {
+  hmi: IrrigationController;
+  screenTitle?: string;
+  screenSubtitle?: string;
+}
+
+export function Header({ hmi, screenTitle, screenSubtitle }: HeaderProps) {
 
     const [now, setNow] = useState(new Date());
 
@@ -24,20 +30,16 @@ export function Header({ hmi }: { hmi: IrrigationController }) {
 return (
   <header className="flex items-start justify-between gap-4">
     <div>
-      <p className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">
-        Garden Control · HMI
-      </p>
-
-      <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mt-1">
-        Sterowanie nawadnianiem
+      <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+        {screenTitle || "Sterowanie nawadnianiem"}
       </h1>
 
       <p className="text-muted-foreground mt-1 text-sm md:text-base">
-        Panel operatorski · Node-RED / PLC / Web
+        {screenSubtitle || "Panel operatorski · Node-RED / PLC / Web"}
       </p>
     </div>
 
-    <div className="flex items-center gap-3 pt-7">
+    <div className="flex items-center gap-3">
       <div className="text-right min-w-[105px]">
         <div className="text-xs text-muted-foreground">{date}</div>
         <div className="text-lg font-semibold tabular-nums">{time}</div>

@@ -19,6 +19,16 @@
  */
 
 @theme inline {
+  --color-surface: var(--surface);
+  --color-surface-deep: var(--surface-deep);
+  --color-zone-emerald: var(--zone-emerald);
+  --color-zone-cyan: var(--zone-cyan);
+  --color-zone-amber: var(--zone-amber);
+  --color-zone-violet: var(--zone-violet);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

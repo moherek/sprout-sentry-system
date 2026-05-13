@@ -60,7 +60,6 @@ const SHAPES: ZoneShape[] = [
     labelX: 805,
     labelY: 165,
     label: "Sekcja 2",
-    bigLabel: "Ogród",
   },
   {
     id: 3,
@@ -77,17 +76,18 @@ const SHAPES: ZoneShape[] = [
     labelX: 260,
     labelY: 325,
     label: "Sekcja 4",
-    bigLabel: "Podjazd",
   },
 ];
 
 export function IrrigationZone({
   shape,
   active,
+  watering,
   onSelect,
 }: {
   shape: ZoneShape;
   active: boolean;
+  watering: boolean;
   onSelect: () => void;
 }) {
   const p = PALETTE[shape.color];
@@ -95,42 +95,49 @@ export function IrrigationZone({
 
   return (
     <g onClick={onSelect} className="cursor-pointer">
-      {active && (
-        <g pointerEvents="none">
-          <path
-            d={d}
-            fill="none"
-            stroke={p.stroke}
-            strokeWidth="8"
-            opacity="0.14"
-            filter={p.filter}
-          >
-            <animate
-              attributeName="opacity"
-              values="0.06;0.22;0.06"
-              dur="2.2s"
-              repeatCount="indefinite"
-            />
-          </path>
-          <circle
-            cx={labelX}
-            cy={labelY - 44}
-            r="26"
-            fill="none"
-            stroke={p.stroke}
-            strokeWidth="3"
-            opacity="0.38"
-          >
-            <animate attributeName="r" values="22;58;22" dur="2.4s" repeatCount="indefinite" />
-            <animate
-              attributeName="opacity"
-              values="0.38;0;0.38"
-              dur="2.4s"
-              repeatCount="indefinite"
-            />
-          </circle>
-        </g>
-      )}
+{watering && (
+  <g pointerEvents="none">
+    <circle
+      cx={labelX}
+      cy={labelY - 44}
+      r="18"
+      fill="none"
+      stroke="#38bdf8"
+      strokeWidth="4"
+      opacity="0.9"
+    >
+      <animate
+        attributeName="r"
+        values="18;70"
+        dur="1.5s"
+        repeatCount="indefinite"
+      />
+      <animate
+        attributeName="opacity"
+        values="0.9;0"
+        dur="1.5s"
+        repeatCount="indefinite"
+      />
+    </circle>
+
+        <text
+      x={labelX}
+      y={labelY - 36}
+      fontSize="30"
+      fontWeight="800"
+      textAnchor="middle"
+    >
+      💧
+
+      <animate
+        attributeName="font-size"
+        values="26;34;26"
+        dur="1.6s"
+        repeatCount="indefinite"
+      />
+    </text>
+  </g>
+)}
 
       <path
         d={d}
@@ -141,16 +148,7 @@ export function IrrigationZone({
         opacity={active ? 1 : 0.78}
         filter={active ? p.filter : undefined}
       />
-      <text
-        x={labelX}
-        y={labelY - 45}
-        fill={p.text}
-        fontSize={active ? 32 : 26}
-        fontWeight="800"
-        textAnchor="middle"
-      >
-        💧
-      </text>
+
       {bigLabel && (
         <text x={labelX} y={labelY - 2} fill={p.text} fontSize="30" fontWeight="800" textAnchor="middle">
           {bigLabel}

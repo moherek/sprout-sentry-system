@@ -75,10 +75,10 @@ export function ActionButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={cn(
-        "w-full rounded-xl md:rounded-2xl py-3 md:py-4 font-semibold flex justify-center items-center gap-2 transition disabled:cursor-not-allowed",
-        styles[variant],
-      )}
+className={cn(
+  "w-full rounded-xl py-2 text-sm font-medium flex justify-center items-center gap-2 transition disabled:cursor-not-allowed",
+  styles[variant],
+)}
     >
       {children}
     </button>

@@ -43,7 +43,9 @@ function Shrubs() {
 
 export function SiteMap({ hmi }: { hmi: IrrigationController }) {
   const isActive = (id: number) =>
-    hmi.activeZoneId === id || !!hmi.zones.find((z) => z.id === id)?.valveOpen;
+    hmi.activeZoneId === id;
+ const isWatering = (id: number) =>
+  !!hmi.zones.find((z) => z.id === id)?.valveOpen;
 
   return (
     <section className="rounded-2xl md:rounded-3xl bg-surface border border-border p-3 md:p-5 shadow-2xl overflow-hidden">
@@ -69,7 +71,7 @@ export function SiteMap({ hmi }: { hmi: IrrigationController }) {
       <div className="relative rounded-2xl md:rounded-3xl bg-surface-deep border border-border p-2 md:p-4 overflow-x-auto overflow-y-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_35%,rgba(143,214,173,0.10),transparent_42%)]" />
 
-        <svg viewBox="0 0 1200 500" className="relative w-[920px] max-w-none md:w-full h-auto select-none">
+        <svg viewBox="0 0 1200 500" className="relative w-[760px] max-w-none md:w-full h-auto select-none">
           <defs>
             <pattern id="grass" width="18" height="18" patternUnits="userSpaceOnUse">
               <circle cx="3" cy="4" r="1.1" fill="rgba(143,214,173,0.13)" />
@@ -113,6 +115,7 @@ export function SiteMap({ hmi }: { hmi: IrrigationController }) {
                 key={shape.id}
                 shape={shape}
                 active={isActive(shape.id)}
+                watering={isWatering(shape.id)}
                 onSelect={() => hmi.selectZone(shape.id)}
               />
             ))}
@@ -136,13 +139,6 @@ export function SiteMap({ hmi }: { hmi: IrrigationController }) {
               taras
             </text>
             <rect x="520" y="265" width="86" height="68" rx="5" fill="rgba(14,20,28,0.98)" stroke="rgba(245,245,247,0.88)" strokeWidth="3" />
-
-            <text x="260" y="303" fill="rgba(245,245,247,0.90)" fontSize="25" fontWeight="800" textAnchor="middle">
-              Podjazd
-            </text>
-            <text x="805" y="150" fill="rgba(201,242,216,0.92)" fontSize="34" fontWeight="800" textAnchor="middle">
-              Ogród
-            </text>
             <Shrubs />
           </g>
         </svg>

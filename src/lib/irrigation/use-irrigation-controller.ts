@@ -167,8 +167,12 @@ export function useIrrigationController(): IrrigationController {
       setRemainingSec(0);
       setActiveZoneId(zoneId);
       setZones((prev) =>
-        prev.map((item) => ({ ...item, valveOpen: item.id === zoneId ? shouldOpen : false })),
-      );
+       prev.map((item) =>
+        item.id === zoneId
+       ? { ...item, valveOpen: shouldOpen }
+         : item
+          )
+        );
       sendCommand(shouldOpen ? "VALVE_OPEN" : "VALVE_CLOSE", { zone: zoneId });
     },
     [mode, zones, sendCommand],

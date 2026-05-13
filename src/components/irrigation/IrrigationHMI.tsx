@@ -18,19 +18,28 @@ export function IrrigationHMI() {
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
         <Header hmi={hmi} />
         <AlarmBanner hmi={hmi} />
-        <SiteMap hmi={hmi} />
+         
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
+        <div className="xl:col-span-8">
+          <SiteMap hmi={hmi} />
+        </div>
 
-        <section className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-5">
-          <ActiveZoneCard hmi={hmi} />
-          <ControlPanel hmi={hmi} />
+        <div className="xl:col-span-4 flex flex-col gap-5">
+           <div className="flex-1">
+          <ControlPanel hmi={hmi} />  
+        </div>
+         <div className="flex-1">
           <SystemStatus hmi={hmi} />
-        </section>
+        </div>
+    
+    </div>
 
+    </div>
         <SettingsPanel hmi={hmi} />
         <ZoneCards hmi={hmi} />
         <SchedulePanel hmi={hmi} />
         <DiagnosticsPanel hmi={hmi} />
-      </div>
+    </div>
     </main>
   );
 }

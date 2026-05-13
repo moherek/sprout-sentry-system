@@ -1,4 +1,3 @@
-import type { IrrigationController } from "@/lib/irrigation/use-irrigation-controller";
 import type { ZoneColor } from "@/lib/irrigation/types";
 
 const PALETTE: Record<

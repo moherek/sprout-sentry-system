@@ -4,7 +4,7 @@ import { IrrigationHMI } from "@/components/irrigation/IrrigationHMI";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Garden Control HMI · Sterowanie nawadnianiem" },
+      { title: "Garden Control HMI - Sterowanie nawadnianiem" },
       {
         name: "description",
         content:

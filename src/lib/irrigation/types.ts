@@ -1,5 +1,6 @@
 export type ZoneColor = "emerald" | "cyan" | "amber" | "violet";
 export type Mode = "AUTO" | "MANUAL";
+export type Weekday = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 
 export interface Zone {
   id: number;
@@ -8,6 +9,32 @@ export interface Zone {
   durationMin: number;
   valveOpen: boolean;
   color: ZoneColor;
+}
+
+export interface Section {
+  id: string;
+  zoneId: number;
+  durationMin: number;
+  enabled: boolean;
+}
+
+export interface Program {
+  id: string;
+  name: string;
+  enabled: boolean;
+  weekdays: Weekday[];
+  startTimes: string[]; // "HH:MM" format
+  sections: Section[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ProgramExecution {
+  programId: string | null;
+  startTime?: string;
+  currentSectionIndex: number;
+  remainingSec: number;
+  status: "idle" | "running" | "paused";
 }
 
 export const DEFAULT_ZONES: Zone[] = [

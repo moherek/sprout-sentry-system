@@ -1,8 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { DEFAULT_ZONES, type Mode, type Zone } from "./types";
+import { DEFAULT_ZONES, type Mode, type Zone, type Program, type ProgramExecution } from "./types";
+import { DEFAULT_PROGRAMS } from "./program-defaults";
+import {
+  calculateTotalDuration,
+  deserializePrograms,
+  generateProgramId,
+  generateSectionId,
+  serializePrograms,
+  validateProgram,
+} from "./program-utils";
 
 export interface IrrigationController {
   zones: Zone[];
+  programs: Program[];
+  programExecution: ProgramExecution;
   mode: Mode;
   running: boolean;
   activeZoneId: number;
@@ -24,12 +35,19 @@ export interface IrrigationController {
   startCycle: () => void;
   stopAll: () => void;
   goNextZone: () => void;
+  goNextProgramSection: () => void;
   changeMode: (mode: Mode) => void;
   selectZone: (zoneId: number) => void;
   toggleManualValve: (zoneId: number) => void;
   updateZone: (zoneId: number, field: keyof Zone, value: string | number | boolean) => void;
   saveSchedule: () => void;
   testConnection: () => void;
+  addProgram: (program: Program) => void;
+  updateProgram: (programId: string, updates: Partial<Program>) => void;
+  deleteProgram: (programId: string) => void;
+  executeProgram: (programId: string, startTimeOverride?: string) => void;
+  stopProgram: () => void;
+  savePrograms: () => void;
 }
 
 export function useIrrigationController(): IrrigationController {
@@ -47,6 +65,27 @@ export function useIrrigationController(): IrrigationController {
     "System uruchomiony",
     "Połączenie z Node-RED: OK",
   ]);
+
+  // Programs state with localStorage persistence
+  const [programs, setPrograms] = useState<Program[]>(() => {
+    try {
+      const stored = localStorage.getItem("irrigation-programs");
+      if (stored) {
+        const deserialized = deserializePrograms(stored);
+        return deserialized.length > 0 ? deserialized : DEFAULT_PROGRAMS;
+      }
+    } catch {
+      console.error("Failed to load programs from localStorage");
+    }
+    return DEFAULT_PROGRAMS;
+  });
+
+  const [programExecution, setProgramExecution] = useState<ProgramExecution>({
+    programId: null,
+    currentSectionIndex: 0,
+    remainingSec: 0,
+    status: "idle",
+  });
 
   const activeZone = zones.find((z) => z.id === activeZoneId) ?? zones[0];
   const openZone = zones.find((z) => z.valveOpen);
@@ -111,6 +150,15 @@ export function useIrrigationController(): IrrigationController {
     }, 1000);
     return () => clearInterval(timer);
   }, [running, mode, goNextZone]);
+
+  // Persist programs to localStorage whenever updated
+  useEffect(() => {
+    try {
+      localStorage.setItem("irrigation-programs", serializePrograms(programs));
+    } catch {
+      console.error("Failed to save programs to localStorage");
+    }
+  }, [programs]);
 
   const startCycle = useCallback(() => {
     const first = zones.find((z) => z.enabled);
@@ -214,8 +262,204 @@ export function useIrrigationController(): IrrigationController {
     });
   }, [addLog]);
 
+  // Program management methods
+  const addProgram = useCallback(
+    (newProgram: Program) => {
+      const program: Program = {
+        ...newProgram,
+        id: newProgram.id || generateProgramId(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      const validation = validateProgram(program);
+      if (!validation.valid) {
+        setAlarm(`Błąd programu: ${validation.errors[0]}`);
+        addLog(`ERROR: Invalid program - ${validation.errors[0]}`);
+        return;
+      }
+
+      setPrograms((prev) => [...prev, program]);
+      addLog(`Program "${program.name}" dodany`);
+    },
+    [addLog],
+  );
+
+  const updateProgram = useCallback(
+    (programId: string, updates: Partial<Program>) => {
+      setPrograms((prev) =>
+        prev.map((p) => {
+          if (p.id !== programId) return p;
+          const updated: Program = { ...p, ...updates, updatedAt: Date.now() };
+
+          const validation = validateProgram(updated);
+          if (!validation.valid) {
+            setAlarm(`Błąd programu: ${validation.errors[0]}`);
+            addLog(`ERROR: Invalid program update - ${validation.errors[0]}`);
+            return p;
+          }
+
+          addLog(`Program "${updated.name}" zaktualizowany`);
+          return updated;
+        }),
+      );
+    },
+    [addLog],
+  );
+
+  const deleteProgram = useCallback(
+    (programId: string) => {
+      setPrograms((prev) => {
+        const program = prev.find((p) => p.id === programId);
+        const updated = prev.filter((p) => p.id !== programId);
+        if (program) {
+          addLog(`Program "${program.name}" usunięty`);
+        }
+        return updated;
+      });
+
+      // If deleted program was running, stop it
+      if (programExecution.programId === programId) {
+        stopProgram();
+      }
+    },
+    [programExecution.programId, addLog],
+  );
+
+  const executeProgram = useCallback(
+    (programId: string, startTimeOverride?: string) => {
+      const program = programs.find((p) => p.id === programId);
+      if (!program) {
+        setAlarm("Program nie znaleziony");
+        return;
+      }
+
+      if (!program.enabled) {
+        setAlarm("Program jest wyłączony");
+        return;
+      }
+
+      const enabledSections = program.sections.filter((s) => s.enabled);
+      if (enabledSections.length === 0) {
+        setAlarm("Program nie ma włączonych sekcji");
+        return;
+      }
+
+      // Start the program execution
+      const startTime = startTimeOverride || program.startTimes[0] || "00:00";
+      setProgramExecution({
+        programId: program.id,
+        startTime,
+        currentSectionIndex: 0,
+        remainingSec: calculateTotalDuration(program) * 60,
+        status: "running",
+      });
+
+      setMode("AUTO");
+      setRunning(true);
+      setAlarm(null);
+
+      // Open first section's zone
+      const firstSection = enabledSections[0];
+      openOnlyZone(firstSection.zoneId);
+
+      sendCommand("EXECUTE_PROGRAM", {
+        programId: program.id,
+        programName: program.name,
+        totalSections: enabledSections.length,
+        totalDurationMin: calculateTotalDuration(program),
+      });
+
+      addLog(`Program "${program.name}" uruchomiony (${enabledSections.length} sekcji, ${calculateTotalDuration(program)} min)`);
+    },
+    [programs, openOnlyZone, sendCommand, addLog],
+  );
+
+  const stopProgram = useCallback(() => {
+    if (programExecution.programId) {
+      const program = programs.find((p) => p.id === programExecution.programId);
+      if (program) {
+        addLog(`Program "${program.name}" zatrzymany`);
+      }
+    }
+
+    setProgramExecution({
+      programId: null,
+      currentSectionIndex: 0,
+      remainingSec: 0,
+      status: "idle",
+    });
+
+    setRunning(false);
+    setRemainingSec(0);
+    closeAllValves();
+    sendCommand("STOP_PROGRAM");
+  }, [programExecution.programId, programs, closeAllValves, sendCommand, addLog]);
+
+  const goNextProgramSection = useCallback(() => {
+    if (!programExecution.programId) {
+      // No program running, fall back to regular zone advancement
+      goNextZone();
+      return;
+    }
+
+    const program = programs.find((p) => p.id === programExecution.programId);
+    if (!program) {
+      setAlarm("Program nie znaleziony podczas wykonywania");
+      stopProgram();
+      return;
+    }
+
+    const enabledSections = program.sections.filter((s) => s.enabled);
+    const nextSectionIndex = programExecution.currentSectionIndex + 1;
+
+    if (nextSectionIndex >= enabledSections.length) {
+      // Program finished
+      addLog(`Program "${program.name}" zakończony`);
+      stopProgram();
+      return;
+    }
+
+    // Advance to next section
+    const nextSection = enabledSections[nextSectionIndex];
+    setProgramExecution((prev) => ({
+      ...prev,
+      currentSectionIndex: nextSectionIndex,
+    }));
+
+    setActiveZoneId(nextSection.zoneId);
+    setRemainingSec(nextSection.durationMin * 60);
+    openOnlyZone(nextSection.zoneId);
+
+    sendCommand("PROGRAM_NEXT_SECTION", {
+      programId: program.id,
+      sectionIndex: nextSectionIndex,
+      zoneId: nextSection.zoneId,
+      durationMin: nextSection.durationMin,
+    });
+
+    addLog(`Program "${program.name}": sekcja ${nextSectionIndex + 1}/${enabledSections.length} (${nextSection.durationMin} min)`);
+  }, [programExecution, programs, goNextZone, setAlarm, stopProgram, setActiveZoneId, setRemainingSec, openOnlyZone, sendCommand, addLog]);
+
+  const savePrograms = useCallback(() => {
+    sendCommand("SAVE_PROGRAMS", {
+      programs: programs.map((p) => ({
+        id: p.id,
+        name: p.name,
+        enabled: p.enabled,
+        weekdays: p.weekdays,
+        startTimes: p.startTimes,
+        sectionCount: p.sections.length,
+        totalDurationMin: calculateTotalDuration(p),
+      })),
+    });
+    addLog("Programy zsynchronizowane z Node-RED");
+  }, [programs, sendCommand, addLog]);
+
   return {
     zones,
+    programs,
+    programExecution,
     mode,
     running,
     activeZoneId,
@@ -237,11 +481,18 @@ export function useIrrigationController(): IrrigationController {
     startCycle,
     stopAll,
     goNextZone,
+    goNextProgramSection,
     changeMode,
     selectZone,
     toggleManualValve,
     updateZone,
     saveSchedule,
     testConnection,
+    addProgram,
+    updateProgram,
+    deleteProgram,
+    executeProgram,
+    stopProgram,
+    savePrograms,
   };
 }
